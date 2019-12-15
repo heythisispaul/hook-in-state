@@ -12,9 +12,6 @@ export default {
   input: 'src/index.js',
   output: [
     {
-      file: pkg.main,
-      format: 'cjs',
-    }, {
       file: pkg.module,
       format: 'esm',
     },
@@ -33,5 +30,4 @@ export default {
       exclude: 'node_modules/**',
     }),
   ],
-  dir: 'lib',
 };

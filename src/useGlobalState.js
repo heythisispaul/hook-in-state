@@ -1,11 +1,10 @@
-// eslint-disable-next-line no-unused-vars
-import React, { createContext, useReducer } from 'react';
+import React, { useReducer } from 'react';
 import { produce } from 'immer';
-import GlobalContext, { GlobalStateProvider } from './context';
+import GlobalContext, { GlobalStateProvider as getGlobalStateProvider } from './context';
 import { getInStateBuilder } from './helpers';
 
 export const useSetupGlobalState = (providedActions = {}, initialState = {}) => {
-  const getNextState = (state = initialState, action) => (
+  const getNextState = (state, action) => (
     produce(state, (draft) => {
       const { type, value } = action;
       const matchingReducer = providedActions[type];
@@ -25,11 +24,11 @@ export const useSetupGlobalState = (providedActions = {}, initialState = {}) => 
   const getInState = getInStateBuilder(state);
   const contextValues = { state, dispatch, actions, getInState };
 
-  const getGlobalStateProvider = GlobalStateProvider(contextValues);
+  const GlobalStateProvider = getGlobalStateProvider(contextValues);
 
   return {
     ...contextValues,
-    GlobalStateProvider: getGlobalStateProvider,
+    GlobalStateProvider,
   };
 };
 
