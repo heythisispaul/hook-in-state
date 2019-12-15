@@ -1,0 +1,15 @@
+.github
+.circleci
+src
+*.tgz
+.babelrc
+.eslintrc.json
+commitlint.config.js
+renovate.json
+rollup.config.js
+.all-contributorsrc
+__tests__/*
+coverage
+.eslintignore
+.eslintrc.js
+README.md
