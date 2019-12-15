@@ -6,10 +6,13 @@ import { getInStateBuilder } from './helpers';
 export const useSetupGlobalState = (providedActions = {}, initialState = {}) => {
   const getNextState = (state, action) => (
     produce(state, (draft) => {
-      const { type, value } = action;
+      const { type, value, reducer } = action;
       const matchingReducer = providedActions[type];
       if (matchingReducer) {
         matchingReducer(draft, value);
+      } 
+      if (reducer) {
+        reducer(draft, value);
       }
     })
   );
@@ -21,8 +24,10 @@ export const useSetupGlobalState = (providedActions = {}, initialState = {}) => 
     actions[type] = (value) => dispatch({ type, value });
   });
 
+  const customDispatch = (value, reducer) => dispatch({ value, reducer });
+
   const getInState = getInStateBuilder(state);
-  const contextValues = { state, dispatch, actions, getInState };
+  const contextValues = { state, dispatch: customDispatch, actions, getInState };
 
   const GlobalStateProvider = getGlobalStateProvider(contextValues);
 

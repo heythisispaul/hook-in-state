@@ -37,6 +37,16 @@ describe('useGlobalState', () => {
       expect(result.current.getInState('anotherExample')).toEqual(exampleText);
     });
 
+    it('calls the provided fuction when using a custom dispatch', () => {
+      const state = createMockState();
+      const { result } = renderHook(() => useSetupGlobalState(mockProvidedActions, state));
+      const customDispatchText = 'updated from custom dispatch!';
+      act(() => {
+        result.current.dispatch(customDispatchText, (state, value) => state.anotherExample = value);
+      });
+      expect(result.current.state.anotherExample).toEqual(customDispatchText);
+    });
+
     it('uses an empt object for state if none provided', () => {
       const { result } = renderHook(() => useSetupGlobalState(mockProvidedActions));
       expect(result.current.state).toEqual({});
