@@ -13,5 +13,7 @@ export const createMockState = () => ({
         value: 'You found me too!'
       }
     ]
-  }
+  },
+  foo: 'bar',
+  hello: 5,
 });

@@ -12,4 +12,3 @@ __tests__/*
 coverage
 .eslintignore
 .eslintrc.js
-README.md

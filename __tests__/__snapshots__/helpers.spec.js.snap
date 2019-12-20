@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`mapDispatchToReducers returns a map of all propvided reducers 1`] = `
+Object {
+  "test": [Function],
+  "test2": [Function],
+}
+`;
