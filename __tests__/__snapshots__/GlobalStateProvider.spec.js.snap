@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`GlobalStateProvider provides the context providing component and it renders its children 1`] = `"<div>I'll render!</div><div>So will I!</div>"`;
+
+exports[`GlobalStateProvider should not error if no initialState is provided 1`] = `"<div>I'll render!</div><div>So will I!</div>"`;

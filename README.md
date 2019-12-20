@@ -13,17 +13,16 @@ npm install hook-in-state
 
 ### Configuring
 
-In the highest level of your React application you would like state access, import `useSetupGlobalState`. This function takes in two parameters:
+In the highest level of your React application you would like state access, import `GlobalStateProvider`. This function takes in two parameters:
 
 1. A **required** 'reducer' object where each key is a function performing some predicatble, synchronous state mutation.
 2. An **optional** object that represents the initial state of your application.
 
-The return value is an object containing `GlobalStateProvider`, a context-providing React component that provides the needed context to all `children`, as well as the 
-values provided by calling `useGlobalState` which are covered below.
+The return value is a context-providing React component that provides the needed context to all `children`.
 
 ```javascript
 import React from 'react';
-import { useSetupGlobalState } from 'hook-in-state';
+import { GlobalStateProvider } from 'hook-in-state';
 
 const reducers = {
   increment: (state) => state.count++,
@@ -40,9 +39,8 @@ const initialState = {
 };
 
 function App() {
-  const { GlobalStateProvider } = useSetupGlobalState(reducers, initialState);
   return (
-    <GlobalStateProvider>
+    <GlobalStateProvider reducers={reducers} initialState={initialState}>
       {/* .. The rest of your application */}
     </GlobalStateProvider>
   );
@@ -56,12 +54,12 @@ export default App;
 Any component further in the component tree will now have the needed context, and can gain access to it by calling `useGlobalState`. The return value is an object containing
 the following properties:
 
-| Name         | Type        | Description                                                                                                                           |
-| -----------  | ----------- | -------------------------------------------------------------------------------------------------------------------------------------
-| `actions`    | `object`    | A map of what was provided to `useSetupGlobalState`. Each key is now a function that will dispatch updates to the state.
-| `getInState` | `function`  | Similar to [lodash's get](https://lodash.com/docs/4.17.15#get). Takes in a stringified object path and an optional fallback value. 
-| `state`      | `object`    | The full state object.
-| `dispatch`   | `function`  | A wrapper around [React's](https://reactjs.org/docs/hooks-reference.html#usereducer) `dispatch` to send unconfigured state updates.
+| Name            | Type        | Description                                                                                                                           |
+| --------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------
+| `actions`       | `object`    | A map of what was provided to `useSetupGlobalState`. Each key is now a function that will dispatch updates to the state.
+| `selectInState` | `function`  | Similar to [lodash's get](https://lodash.com/docs/4.17.15#get). Takes in a stringified object path and an optional fallback value. 
+| `useSelector`   | `function`  | A hook that can make memoized calls to state.
+| `dispatch`      | `function`  | A wrapper around [React's](https://reactjs.org/docs/hooks-reference.html#usereducer) `dispatch` to send unconfigured state updates.
 
 A simple example of any given child component of our `App` component where the global state was set up:
 
@@ -70,15 +68,16 @@ import React from 'react';
 import useGlobalState from 'hook-in-state';
 
 const SomeChildComponent = () => {
-  const { actions, getInState, state } = useGlobalState();
+  const { actions, selectInState } = useGlobalState();
   const { updateGreeting, increment, decrement } = actions;
-  const greeting = getInState('conversation.greeting');
-  const thankYou = getInState('conversation.thank');
+  const greeting = selectInState('conversation.greeting');
+  const thankYou = selectInState('conversation.thank');
+  const count = selectInState('count');
 
   return (
     <div>
       <h1>{greeting}</h1>
-      <h1>Current Count: {state.count}</h1>
+      <h1>Current Count: {count}</h1>
       <button type="button" onClick={increment}>
         Add
       </button>
@@ -108,17 +107,18 @@ import React from 'react';
 import useGlobalState from 'hook-in-state';
 
 const SomeChildComponent = () => {
-  const { actions, getInState, state, dispatch } = useGlobalState();
+  const { actions, selectInState, dispatch } = useGlobalState();
   const { updateGreeting, increment, decrement } = actions;
-  const greeting = getInState('conversation.greeting');
-  const thankYou = getInState('conversation.thank');
+  const greeting = selectInState('conversation.greeting');
+  const thankYou = selectInState('conversation.thank');
+  const count = selectInState('count');
 
   const updateThankYou = (value) => dispatch(value, (state, value) => state.conversation.thank = value);
 
   return (
     <div>
       <h1>{greeting}</h1>
-      <h1>Current Count: {state.count}</h1>
+      <h1>Current Count: {count}</h1>
       <button type="button" onClick={increment}>
         Add
       </button>
@@ -143,16 +143,16 @@ export default SomeChildComponent;
 
 Even though the changes we set up in our reducing functions appear to be mutating the state, due to the `produce` function provided by [Immer](https://immerjs.github.io/immer/docs/produce) the state is never directly manipulated. Directly attempting to change the state will not work.
 
-The `getInState` function can also be very handy for trying to locate deeply nested properties. It will traverse the stringified path provided and if at any point comes across an
+The `selectInState` function can also be very handy for trying to locate deeply nested properties. It will traverse the stringified path provided and if at any point comes across an
 `undefined` value it will return the second parameter as a fallback value.
 
-```javascript
-const reducers = {
-  increment: (state) => state.count++,
-  decrement: (state) => state.count--,
-};
+The `useSelector` function is a hook that takes in a function that receives the state as an argument and will return the result of the function. Its second argument is an
+array, that when mutated will cause the provided function to refire. Any functions provided to this array will be called with the state value.
 
-const initialState = {
+```javascript
+
+// global state provided to GlobalStateProvider:
+const state = {
   count: 0,
   some: {
     deeply: {
@@ -165,27 +165,40 @@ const initialState = {
     one: [
       {
         too: 'Hello out there!',
+        also: 'Found me again!',
       },
     ],
   },
 };
 
-const {
-  state,
-  getInState,
-} = useSetupGlobalState(reducers, initialState);
+// in any component:
+
+const { selectInState, useSelector } = useGlobalState();
 
 const updateStateDirectly = () => state.count = 5; 
 // TypeError: Cannot assign to read only property 'count'
 
-const deepStateOne = getInState('some.deeply.nested.value');
+const deepStateOne = selectInState('some.deeply.nested.value');
 // 'You found me!'
 
-const deepStateTwo = getInState('this.one[0].too');
+const deepStateTwo = selectInState('this.one[0].too');
 // 'Hello out there!'
 
-const deepStateThree = getInState('not.a.path', 'Fallback time!');
+const deepStateThree = selectInState(['this', 'one', 0, 'also']);
+// 'Found me again!'
+
+const deepStateFour = selectInState('not.a.path', 'Fallback time!');
 // 'Fallback time!'
+
+// useSelector
+
+const props = { foo: 'bar' };
+
+// will only refire if the 'some' property of state or 'props' changes.
+const myStateValue = useSelector(
+  (state) => state.some.deeply.nested.value,
+  [(state) => state.some, props]
+);
 ```
 
 ## Contributing

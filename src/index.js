@@ -1,4 +1,4 @@
 import useGlobalState from './useGlobalState';
 
-export { useSetupGlobalState } from './useGlobalState';
+export { default as GlobalStateProvider } from './GlobalStateProvider';
 export default useGlobalState;
