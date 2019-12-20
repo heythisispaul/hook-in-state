@@ -1,6 +1,6 @@
 {
   "name": "hook-in-state",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "Redux for React without Redux",
   "main": "lib/index.js",
   "module": "lib/index.esm.js",
